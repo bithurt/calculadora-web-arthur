@@ -1,43 +1,70 @@
-from flask import Flask, request, jsonify, render_template
-import operacoes  # importa funções do arquivo separado
-
-# Como executar:
-# 1. Certifique-se de ter o Flask instalado: pip install flask
-# 2. Execute este arquivo: python app.py
-# python.exe -m pip install --upgrade pip
+from flask import Flask, jsonify, render_template, request
+import operacoes
 
 app = Flask(__name__)
 
-# Página inicial
+
+def calcular_operacao(funcao):
+    dados = request.get_json(silent=True) or {}
+
+    try:
+        valor1 = float(dados["valor1"])
+        valor2 = float(dados["valor2"])
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"erro": "Digite dois números válidos."}), 400
+
+    try:
+        resultado = funcao(valor1, valor2)
+    except ZeroDivisionError:
+        return jsonify({"erro": "Não é possível dividir por zero."}), 400
+
+    return jsonify({"resultado": resultado})
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# Página de soma
+
 @app.route("/soma")
 def soma_page():
     return render_template("soma.html")
 
+
 @app.route("/api/soma", methods=["POST"])
 def soma():
-    dados = request.get_json()
-    valor1 = float(dados["valor1"])
-    valor2 = float(dados["valor2"])
-    resultado = operacoes.calcular_soma(valor1, valor2)
-    return jsonify({"resultado": resultado})
+    return calcular_operacao(operacoes.calcular_soma)
 
-# Página de subtração
+
 @app.route("/subtracao")
 def subtracao_page():
     return render_template("subtracao.html")
 
+
 @app.route("/api/subtracao", methods=["POST"])
 def subtracao():
-    dados = request.get_json()
-    valor1 = float(dados["valor1"])
-    valor2 = float(dados["valor2"])
-    resultado = operacoes.calcular_subtracao(valor1, valor2)
-    return jsonify({"resultado": resultado})
+    return calcular_operacao(operacoes.calcular_subtracao)
+
+
+@app.route("/multiplicacao")
+def multiplicacao_page():
+    return render_template("multiplicacao.html")
+
+
+@app.route("/api/multiplicacao", methods=["POST"])
+def multiplicacao():
+    return calcular_operacao(operacoes.calcular_multiplicacao)
+
+
+@app.route("/divisao")
+def divisao_page():
+    return render_template("divisao.html")
+
+
+@app.route("/api/divisao", methods=["POST"])
+def divisao():
+    return calcular_operacao(operacoes.calcular_divisao)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
